@@ -52,8 +52,8 @@ class Game:
         # Initialize world grid
         self.show_world_grid = True  # Toggles display of grid on screen
         self.grid = GridWorld(10, 10)
-        self.grid_cell_objects = self.initialize_grid(grid_size_x=400, grid_start_x=10,
-                                                      grid_start_y=50, show_grid_lines=True)
+        self.grid_cell_objects, self.cell_size = self.initialize_grid(grid_size_x=400, grid_start_x=10,
+                                                                      grid_start_y=50, show_grid_lines=True)
 
     def process_events(self):
         """
@@ -98,6 +98,12 @@ class Game:
             for cell in self.grid_cell_objects:
                 pygame.draw.rect(screen, cell["color"], cell["rect"])
 
+            # AAAAAA
+            player_x, player_y = 1.5, 1.5
+            grid_start_x, grid_start_y = 10, 50
+            pygame.draw.circle(screen, (255, 0, 0), (player_x * self.cell_size + grid_start_x,
+                                                     player_y * self.cell_size + grid_start_y), 5, 2)
+
     def initialize_grid(self, grid_size_x, grid_start_x=0, grid_start_y=0, show_grid_lines=False):
         """
         Creates pygame rect objects for every cell in the grid world.
@@ -129,7 +135,7 @@ class Game:
                                           "col_index": col_index})
 
         # Return cell obj array
-        return grid_cell_objects
+        return grid_cell_objects, cell_size
 
     def _on_toggle_grid(self):
         """
