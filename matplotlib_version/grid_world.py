@@ -9,7 +9,7 @@ class Ray:
         # Start Parameters
         self.start_x = start_x
         self.start_y = start_y
-        self.angle = angle_degrees
+        self.angle = angle_degrees % 360  # Limit to 360 degrees
 
         # Calculated Parameters
         self.horizontal_grid_collisions = []
@@ -40,18 +40,31 @@ class Ray:
         cosine_angle = math.cos(math.radians(self.angle))
         sine_angle = math.sin(math.radians(self.angle))
 
+        # Determine line type (pointing upwards or downwards)
+        if self.angle > 180:
+            upwards_direction = True
+        else:
+            upwards_direction = False
+
         """Get coordinates of first collision with horizontal grid border"""
 
         # Calculate the next horizontal border
         cell_size = grid_class_object.cell_size
-        next_horizontal_border = math.ceil(self.start_y / cell_size) * cell_size
+
+        if upwards_direction:
+            next_horizontal_border = math.floor(self.start_y / cell_size) * cell_size
+        else:
+            next_horizontal_border = math.ceil(self.start_y / cell_size) * cell_size
 
         # Use next horizontal border to calculate distance to it (opposite) and derive adjacent after
         opposite = next_horizontal_border - self.start_y  # Gegenkathete
         adjacent = opposite / sine_angle  # Ankathete
 
         # With adjacent, calculate the x coordinate of the grid collision (y coordinate is simply the horizontal border)
-        first_horizontal_grid_collision = (self.start_x + adjacent * cosine_angle, next_horizontal_border)
+        if upwards_direction:
+            first_horizontal_grid_collision = (self.start_x - adjacent * cosine_angle, next_horizontal_border)
+        else:
+            first_horizontal_grid_collision = (self.start_x + adjacent * cosine_angle, next_horizontal_border)
         self.horizontal_grid_collisions.append(first_horizontal_grid_collision)
 
         """Get subsequent horizontal grid collisions (From now on always full cell steps)"""
@@ -59,18 +72,23 @@ class Ray:
         current_x, current_y = first_horizontal_grid_collision
         full_cell_horizontal_collision_x_length = cell_size / sine_angle  # opposite calculation
 
-        # Colcualte world boundaries
+        # Calcualte world boundaries
         y_boundary = grid_class_object.cell_amount_y * cell_size
         x_boundary = grid_class_object.cell_amount_x * cell_size
 
         # Step through horizontal grid lines until a collision with a cell or the end of the world
         while 0 < current_y < y_boundary and 0 < current_x < x_boundary:
-            current_x += full_cell_horizontal_collision_x_length * cosine_angle
-            current_y += cell_size
+            if upwards_direction:
+                current_x -= full_cell_horizontal_collision_x_length * cosine_angle
+                current_y -= cell_size
+            else:
+                current_x += full_cell_horizontal_collision_x_length * cosine_angle
+                current_y += cell_size
 
             # Check collision with cell
             cell_y_coord = int(current_y / cell_size)
             cell_x_coord = math.floor(current_x / cell_size)
+
             try:
                 if grid_class_object.get_value(cell_x_coord, cell_y_coord) != 0:
 
@@ -83,9 +101,9 @@ class Ray:
 
                 else:
                     self.horizontal_grid_collisions.append((current_x, current_y))
+            except:
+                pass
 
-            except IndexError:
-                break
 
 
 class GridWorld:
@@ -170,6 +188,7 @@ class GridWorld:
                 else:
                     end_x, end_y = ray.calculate_direction(distance=100000)
 
+                print(end_x, end_y)
                 ax.add_line(lines.Line2D([ray.start_x, end_x], [ray.start_y, end_y]))
 
         plt.xlim(0, self.cell_amount_x * self.cell_size)
@@ -192,16 +211,18 @@ if __name__ == '__main__':
     gw.set_value(7, 6, 1)
 
 
-    for i in range(10):
-        gw.add_ray(2800, 4200, 15 + 4 * i)
+    for i in range(90):
+        gw.add_ray(2800, 6200, 15 + 4 * i)
 
+    """
     gw.add_ray(2800, 4200, 125)
 
     gw.add_ray(2800, 4200, 115)
 
     gw.add_ray(2800, 4200, 180)
     gw.add_ray(2800, 4200, 190)
-
+    gw.add_ray(2800, 4200, 320)
+    """
 
 
     print(gw)
