@@ -14,10 +14,10 @@ class Ray:
         # Calculated Parameters
         self.horizontal_grid_collisions = []
         self.vertical_grid_collisions = []
-        self.collided_cell_x = None  # Collision coordiante
-        self.collided_cell_y = None  # Collision coordiante
-        self.collided_cell_x_pos = None  # Cell position in grid
-        self.collided_cell_y_pos = None  # Cell position in grid
+        self.collision_coord_x = None  # Collision coordiante
+        self.collision_coord_y = None  # Collision coordiante
+        self.collided_cell_x = None  # Cell position in grid
+        self.collided_cell_y = None  # Cell position in grid
 
     # TODO TEMP
     def calculate_direction(self, distance=1):
@@ -31,10 +31,10 @@ class Ray:
         # Reset calculated parameters
         self.horizontal_grid_collisions = []
         self.vertical_grid_collisions = []
-        self.collided_cell_x = None  # Collision coordiante
-        self.collided_cell_y = None  # Collision coordiante
-        self.collided_cell_x_pos = None  # Cell position in grid
-        self.collided_cell_y_pos = None  # Cell position in grid
+        self.collision_coord_x = None  # Collision coordiante
+        self.collision_coord_y = None  # Collision coordiante
+        self.collided_cell_x = None  # Cell position in grid
+        self.collided_cell_y = None  # Cell position in grid
 
         # Precalculate sine and cosine
         cosine_angle = math.cos(math.radians(self.angle))
@@ -72,39 +72,35 @@ class Ray:
         current_x, current_y = first_horizontal_grid_collision
         full_cell_horizontal_collision_x_length = cell_size / sine_angle  # opposite calculation
 
-        # Calcualte world boundaries
+        # Calculate world boundaries
         y_boundary = grid_class_object.cell_amount_y * cell_size
         x_boundary = grid_class_object.cell_amount_x * cell_size
 
         # Step through horizontal grid lines until a collision with a cell or the end of the world
         while 0 < current_y < y_boundary and 0 < current_x < x_boundary:
-            if upwards_direction:
-                current_x -= full_cell_horizontal_collision_x_length * cosine_angle
-                current_y -= cell_size
-            else:
-                current_x += full_cell_horizontal_collision_x_length * cosine_angle
-                current_y += cell_size
 
             # Check collision with cell
-            cell_y_coord = int(current_y / cell_size)
+            cell_y_coord = int(current_y / cell_size) - (1 if upwards_direction else 0)
             cell_x_coord = math.floor(current_x / cell_size)
 
-            try:
-                if grid_class_object.get_value(cell_x_coord, cell_y_coord) != 0:
+            if grid_class_object.get_value(cell_x_coord, cell_y_coord) != 0:
 
-                    # Save values for collision with cell
-                    self.collided_cell_x = current_x
-                    self.collided_cell_y = current_y
-                    self.collided_cell_x_pos = cell_x_coord
-                    self.collided_cell_y_pos = cell_y_coord
-                    break
+                # Save values for collision with cell
+                self.collision_coord_x = current_x
+                self.collision_coord_y = current_y
+                self.collided_cell_x = cell_x_coord
+                self.collided_cell_y = cell_y_coord
+                break
 
-                else:
-                    self.horizontal_grid_collisions.append((current_x, current_y))
-            except:
-                pass
+            else:
+                self.horizontal_grid_collisions.append((current_x, current_y))
 
-
+            # Increment coordinates for collision check
+            if upwards_direction:
+                current_y -= cell_size
+            else:
+                current_y += cell_size
+            current_x += full_cell_horizontal_collision_x_length * cosine_angle
 
 class GridWorld:
 
@@ -182,13 +178,12 @@ class GridWorld:
                 for x, y in ray.horizontal_grid_collisions:
                     ax.plot(x, y, marker='.', color="red")
 
-                if ray.collided_cell_x is not None:
-                    ax.plot(ray.collided_cell_x, ray.collided_cell_y, marker='x', color="lime")
-                    end_x, end_y = ray.collided_cell_x, ray.collided_cell_y
+                if ray.collision_coord_x is not None:
+                    ax.plot(ray.collision_coord_x, ray.collision_coord_y, marker='x', color="lime")
+                    end_x, end_y = ray.collision_coord_x, ray.collision_coord_y
                 else:
                     end_x, end_y = ray.calculate_direction(distance=100000)
 
-                print(end_x, end_y)
                 ax.add_line(lines.Line2D([ray.start_x, end_x], [ray.start_y, end_y]))
 
         plt.xlim(0, self.cell_amount_x * self.cell_size)
@@ -211,17 +206,19 @@ if __name__ == '__main__':
     gw.set_value(7, 6, 1)
 
 
+
     for i in range(90):
         gw.add_ray(2800, 6200, 15 + 4 * i)
 
     """
-    gw.add_ray(2800, 4200, 125)
-
-    gw.add_ray(2800, 4200, 115)
-
-    gw.add_ray(2800, 4200, 180)
-    gw.add_ray(2800, 4200, 190)
-    gw.add_ray(2800, 4200, 320)
+    gw.add_ray(2800, 5200, 30)
+    gw.add_ray(2800, 5200, 50)
+    gw.add_ray(2800, 5200, 100)
+    gw.add_ray(2800, 5200, 115)
+    gw.add_ray(2800, 5200, 320)
+    gw.add_ray(2800, 5200, 300)
+    gw.add_ray(2800, 5200, 250)
+    gw.add_ray(2800, 5200, 220)
     """
 
 
